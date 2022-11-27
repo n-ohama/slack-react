@@ -5,33 +5,44 @@ import {
   Heading,
   Input,
   Stack,
-  useToast,
   Text,
+  useToast,
 } from "@chakra-ui/react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useRecoilValue } from "recoil";
-import { auth } from "../utils/firebase";
+import { auth, database, USER_DB } from "../utils/firebase";
 import { historyState, loginState } from "../utils/provider";
+import { UserTyp } from "../utils/types";
 
-export const LoginPage = () => {
+export const SignupPage = () => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const loginInfo = useRecoilValue(loginState);
   const historyValue = useRecoilValue(historyState);
   const toast = useToast();
-  const login = () => {
+
+  const signUp = () => {
     setIsLoading(true);
-    signInWithEmailAndPassword(auth, email, password)
-      .then((_) =>
-        toast({
-          title: "Login Success",
-          status: "success",
-          isClosable: true,
-          duration: 1000,
-        })
+
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) =>
+        setDoc(doc(database, USER_DB, userCredential.user.uid), {
+          userId: userCredential.user.uid,
+          userName: name,
+          myRooms: [],
+        }).then(() =>
+          toast({
+            title: "Sign up Success",
+            status: "success",
+            isClosable: true,
+            duration: 1000,
+          })
+        )
       )
       .catch((error) =>
         toast({
@@ -51,8 +62,14 @@ export const LoginPage = () => {
       <Box bg="white" w="sm" p={4} borderRadius="md" shadow="md">
         <Stack spacing={6} py={4} px={10}>
           <Heading as="h1" size="lg" textAlign="center">
-            Login
+            Sign Up
           </Heading>
+          <Input
+            type="text"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
           <Input
             type="email"
             placeholder="Email"
@@ -66,15 +83,15 @@ export const LoginPage = () => {
             onChange={(e) => setPassword(e.target.value)}
           />
           <Button
-            disabled={email === "" || password === ""}
+            disabled={email === "" || password === "" || name === ""}
             isLoading={isLoading}
-            onClick={login}
+            onClick={signUp}
           >
-            ログイン
+            サインアップ
           </Button>
-          <Link to="/signup">
+          <Link to="/">
             <Text size={"xs"} color="cyan.600">
-              アカウントをお持ちでない方
+              既にアカウントをお持ちの方
             </Text>
           </Link>
         </Stack>

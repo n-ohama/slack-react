@@ -5,6 +5,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { useSetRecoilState } from "recoil";
 import { Dashboard } from "./pages/Dashboard";
 import { LoginPage } from "./pages/LoginPage";
+import { SignupPage } from "./pages/SignupPage";
 import { auth } from "./utils/firebase";
 import { loginState } from "./utils/provider";
 
@@ -31,7 +32,8 @@ const App = () => {
       ) : (
         <Routes>
           <Route path="/" element={<LoginPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/dashboard/:roomId" element={<Dashboard />} />
         </Routes>
       )}
     </BrowserRouter>
