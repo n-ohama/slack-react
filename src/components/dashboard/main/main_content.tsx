@@ -1,5 +1,5 @@
 import { doc, onSnapshot } from "firebase/firestore";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { database, roomConverter, ROOM_DB } from "../../../utils/firebase";
@@ -9,9 +9,11 @@ import {
   userInfoState,
 } from "../../../utils/provider";
 import { MessageContent } from "./message_content";
+import { Box } from "@chakra-ui/react";
 
 export const MainContent = () => {
   const { roomId } = useParams();
+  const msgEndRef = useRef<HTMLDivElement>(null);
   const setHistory = useSetRecoilState(historyState);
   const userInfo = useRecoilValue(userInfoState);
   const [roomInfo, setRoomInfo] = useRecoilState(roomState(roomId!));
@@ -23,7 +25,10 @@ export const MainContent = () => {
       const unsubscribe = onSnapshot(
         doc(database, ROOM_DB, roomId).withConverter(roomConverter),
         (doc) => {
-          if (doc.exists()) {
+          if (
+            doc.exists() &&
+            doc.data().messages.length !== roomInfo?.messages.length
+          ) {
             setRoomInfo(doc.data());
           }
         }
@@ -34,9 +39,20 @@ export const MainContent = () => {
       };
     }
   }, [roomId, idArr]);
+
+  useEffect(() => {
+    msgEndRef.current?.scrollIntoView();
+  }, [roomInfo?.messages]);
   return (
-    <>
-      {roomInfo && roomInfo.messages.map((msg) => <MessageContent msg={msg} />)}
-    </>
+    <Box h="680px" overflow="scroll">
+      {roomInfo && (
+        <>
+          {roomInfo.messages.map((msg) => (
+            <MessageContent msg={msg} />
+          ))}
+          <div ref={msgEndRef} />
+        </>
+      )}
+    </Box>
   );
 };
